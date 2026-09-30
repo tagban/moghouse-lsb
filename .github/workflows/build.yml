@@ -88,12 +88,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # built into the runner's Docker first (not pushed), tested, and pushed only if the tests pass
       - uses: docker/build-push-action@v6
         if: steps.built.outputs.skip != 'true'
         with:
           context: lsb
           file: lsb/docker/ubuntu.Dockerfile
-          push: true
+          load: true
           # one plain image per build (no attestation manifests beside it), so the cleanup below can
           # delete whole old builds without touching what a kept one needs
           provenance: false
@@ -111,6 +112,21 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ env.TAG }}
+
+      # MogHouse's tests (tests/*.lua) in LandSandBoat's xi_test, against the new image
+      - name: Test
+        if: steps.built.outputs.skip != 'true'
+        run: |
+          docker run --rm -v navmeshes:/navmeshes -v ximeshes:/ximeshes ghcr.io/landsandboat/ximeshes:latest
+          docker image rm ghcr.io/landsandboat/ximeshes:latest
+          mog/tools/test.sh "$IMAGE:$TAG" | tee test.log
+          grep -q '^\[  PASSED  \]' test.log && ! grep -q '^\[  FAILED  \]' test.log
+
+      - name: Push
+        if: steps.built.outputs.skip != 'true'
+        run: |
+          docker push "$IMAGE:$TAG"
+          docker push "$IMAGE:latest"
 
       - name: Published
         if: steps.built.outputs.skip != 'true'

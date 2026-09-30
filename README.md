@@ -25,7 +25,8 @@ repository at build time, and the server's settings and passwords stay on the se
 2. `tools/assemble.sh`: our modules and `init.txt` into it, the bridge's module, and LandSandBoat's
    generated Lua enums (below).
 3. LandSandBoat's own `docker/ubuntu.Dockerfile` builds it (about half an hour).
-4. Published as `ghcr.io/tagban/moghouse-lsb:latest` and `:lsb-<LandSandBoat commit>-mog-<ours>`, labeled
+4. Tested (below): if a test fails, nothing is published, and the server keeps the image it has.
+5. Published as `ghcr.io/tagban/moghouse-lsb:latest` and `:lsb-<LandSandBoat commit>-mog-<ours>`, labeled
    with the LandSandBoat commit (`cc.moghouse.lsb-commit`), which the server's source is matched to.
 
 It runs nightly (doing nothing if neither LandSandBoat nor this repository changed), on every push to
@@ -39,13 +40,33 @@ a push, or Actions, Build, "Enable workflow", turns it back on.
 
 - **A command**: a file in `modules/moghouse/commands/`, in LandSandBoat's command-module form (see
   any file there: a `commandObj` with `cmdprops` and `onTrigger`, then
-  `xi.module.registerCommand('<name>', commandObj)`). The folder is already listed.
+  `xi.module.registerCommand('<name>', commandObj)`). The folder is already listed. Add it, with its
+  GM level, to `PERMISSIONS` in `tests/commands.lua`.
 - **Another module** (Lua or C++): a file or folder under `modules/moghouse/`, and a line in
   `modules/init.txt`. LandSandBoat's own optional modules (`modules/custom/...` in its repository) are
   turned on by listing them there too.
 
 Push to `main`; the image is built; on the server, `ffxi-update` pulls it, updates the database and
 restarts (asking first, and warning the players).
+
+## Tests
+
+`tests/*.lua` are run in LandSandBoat's `xi_test` (a map server with simulated players, in the image)
+against each new image, before it is published: every command is registered at its GM level, `!jinx`'s
+defense makes a level 1 mob hurt a level 75 warrior (about 8 damage a minute becomes 400), its train
+sets every live mob in a zone on the victim, and `!slap` sends the knockback.
+
+To run them yourself (Docker, on an x86-64 machine or VM):
+
+```bash
+docker run --rm -v navmeshes:/navmeshes -v ximeshes:/ximeshes ghcr.io/landsandboat/ximeshes:latest   # once
+tools/test.sh                       # against ghcr.io/tagban/moghouse-lsb:latest
+tools/test.sh <image>               # or another
+```
+
+The commands are mounted from the checkout, so a change to a Lua command can be tested before it is
+pushed, without building an image. How to write a test: LandSandBoat's
+[Testing](https://github.com/LandSandBoat/server/blob/base/docs/wiki/Testing.md).
 
 ## Why the generated enums are added here
 
