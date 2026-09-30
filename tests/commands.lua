@@ -158,32 +158,46 @@ describe('MogHouse commands', function()
         end)
     end)
 
+    -- LandSandBoat builds C++ modules into xi_map only, not xi_test, so mogKnockback (knockback.cpp) is
+    -- not here: a stand-in records the call. The packet itself is seen in game.
     describe('!slap', function()
-        it('knocks the victim back, for everyone nearby to see', function()
+        it('knocks the victim back as hard as it goes, with the slap animation, and hurts', function()
             local gm, victim = spawnPair(xi.zone.SOUTH_GUSTABERG)
             gm:setPos(victim:getXPos() + 2, victim:getYPos(), victim:getZPos())
-            gm:setCharVar('GMHidden', 0)
-            victim.packets:clear()
+            victim:setHP(victim:getMaxHP())
 
-            assert(type(mogKnockback) == 'function', 'mogKnockback is missing: the knockback module is not built in')
-            xi.commands.slap.onTrigger(gm, victim:getName(), 5)
-            victim:tick()
+            local calls = {}
+            local real = rawget(_G, 'mogKnockback')
+            rawset(_G, 'mogKnockback', function(actor, targetId, knockback, animation)
+                table.insert(calls, { actor = actor:getID(), target = targetId, knockback = knockback, animation = animation })
+            end)
 
-            local seen
-            for _, action in ipairs(victim.packets:actionPackets()) do
-                if action.m_uID == gm:getID() then
-                    seen = action
-                end
-            end
+            local ok, err = pcall(xi.commands.slap.onTrigger, gm, victim:getName(), 5)
+            rawset(_G, 'mogKnockback', real)
+            assert(ok, err)
 
-            assert(seen ~= nil, 'the victim saw no action from the GM')
-            local result = seen.target[1].result[1]
-            print(string.format('action: cmd_no %d, target %d, sub_kind %d, scale %d',
-                seen.cmd_no, seen.target[1].m_uID, result.sub_kind, result.scale))
-            assert(seen.target[1].m_uID == victim:getID(), 'the action hit someone else')
-            assert(result.sub_kind == 899, 'not the slap animation')
-            assert(result.scale ~= 0, 'no knockback in the action')
+            assert(#calls == 1, string.format('mogKnockback called %d times', #calls))
+            assert(calls[1].actor == gm:getID(), 'the slap came from someone else')
+            assert(calls[1].target == victim:getID(), 'the slap hit someone else')
+            assert(calls[1].knockback == 7, 'not the strongest knockback')
+            assert(calls[1].animation == 899, 'not the slap animation')
             assert(victim:getHP() == victim:getMaxHP() - 5, 'the 5 damage was not dealt')
+        end)
+
+        it('does nothing to a player out of reach', function()
+            local gm, victim = spawnPair(xi.zone.SOUTH_GUSTABERG)
+            gm:setPos(victim:getXPos() + 100, victim:getYPos(), victim:getZPos())
+
+            local called = false
+            local real = rawget(_G, 'mogKnockback')
+            rawset(_G, 'mogKnockback', function()
+                called = true
+            end)
+
+            local ok, err = pcall(xi.commands.slap.onTrigger, gm, victim:getName(), 5)
+            rawset(_G, 'mogKnockback', real)
+            assert(ok, err)
+            assert(not called, 'slapped from 100 yalms away')
         end)
     end)
 end)

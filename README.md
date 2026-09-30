@@ -54,7 +54,7 @@ restarts (asking first, and warning the players).
 `tests/*.lua` are run in LandSandBoat's `xi_test` (a map server with simulated players, in the image)
 against each new image, before it is published: every command is registered at its GM level, `!jinx`'s
 defense makes a level 1 mob hurt a level 75 warrior (about 8 damage a minute becomes 400), its train
-sets every live mob in a zone on the victim, and `!slap` sends the knockback.
+sets every live mob in a zone on the victim, and `!slap` knocks back with its animation. (LandSandBoat builds C++ modules into `xi_map` only, not `xi_test`: the knockback packet itself is seen in game.)
 
 To run them yourself (Docker, on an x86-64 machine or VM):
 
