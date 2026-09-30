@@ -94,6 +94,10 @@ jobs:
           context: lsb
           file: lsb/docker/ubuntu.Dockerfile
           push: true
+          # one plain image per build (no attestation manifests beside it), so the cleanup below can
+          # delete whole old builds without touching what a kept one needs
+          provenance: false
+          sbom: false
           build-args: |
             REPO_URL=${{ env.LSB_REPO }}
             COMMIT_SHA=${{ env.LSB_COMMIT }}
@@ -113,3 +117,14 @@ jobs:
         run: |
           echo "### $IMAGE:$TAG" >> "$GITHUB_STEP_SUMMARY"
           echo "LandSandBoat $LSB_COMMIT, MogHouse $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+  # keeps the newest 15 images (to go back to) and deletes older ones
+  cleanup:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: moghouse-lsb
+          package-type: container
+          min-versions-to-keep: 15

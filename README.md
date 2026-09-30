@@ -30,7 +30,10 @@ repository at build time, and the server's settings and passwords stay on the se
 
 It runs nightly (doing nothing if neither LandSandBoat nor this repository changed), on every push to
 `main`, and by hand: Actions, Build, Run workflow (where another LandSandBoat commit can be named, to
-hold back or try one).
+hold back or try one). The newest 15 images are kept; older ones are deleted after each build.
+
+GitHub turns a public repository's nightly schedule off after 60 days without a push (it emails first);
+a push, or Actions, Build, "Enable workflow", turns it back on.
 
 ## Adding to it
 
