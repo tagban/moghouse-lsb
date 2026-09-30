@@ -1,0 +1,16 @@
+# The modules MogHouse's server image loads (it replaces LandSandBoat's modules/init.txt when the image
+# is built). One per line, a file or a folder, relative to modules/: LandSandBoat's own are under
+# custom/ (and era/), the Discord bridge's in discord_bridge/, MogHouse's in moghouse/.
+
+# a test NPC in the GM home
+custom/lua/test_npcs_in_gm_home.lua
+
+# "Player <name> has logged in." to everyone, at login (not when zoning)
+custom/lua/announce_player_login.lua
+
+# the Discord bridge (github.com/tagban/lsb-discord-bridge): Say, Shout and Yell recorded for the bot
+# and sent to every zone, as the server's settings/discord_bridge.lua says
+discord_bridge/
+
+# MogHouse's GM commands (!home, !gmgear, ...)
+moghouse/commands/

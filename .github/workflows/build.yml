@@ -1,0 +1,115 @@
+# MogHouse's server image: LandSandBoat (its `base` branch, newest, unless a run names another commit)
+# with MogHouse's modules (tools/assemble.sh), built with LandSandBoat's own Dockerfile, published as
+# ghcr.io/tagban/moghouse-lsb. The VPS pulls it (ffxi-update); nothing is compiled there.
+#
+# Runs nightly (and does nothing when neither LandSandBoat nor this repository changed since the last
+# image), on every push to main, and by hand (Actions, Build, Run workflow).
+name: Build
+
+on:
+  schedule:
+    - cron: '17 9 * * *' # 09:17 UTC, nightly
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      lsb_ref:
+        description: LandSandBoat branch, tag or commit
+        default: base
+      bridge_ref:
+        description: lsb-discord-bridge branch, tag or commit
+        default: main
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/tagban/moghouse-lsb
+  LSB_REPO: https://github.com/LandSandBoat/server
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: mog
+
+      - name: LandSandBoat
+        run: |
+          git clone --filter=blob:none --no-checkout "$LSB_REPO" lsb
+          git -C lsb checkout -q "${{ inputs.lsb_ref || 'base' }}"
+          lsb=$(git -C lsb rev-parse HEAD)
+          mog=$(git -C mog rev-parse --short=7 HEAD)
+          echo "LSB_COMMIT=$lsb" >> "$GITHUB_ENV"
+          echo "TAG=lsb-${lsb:0:10}-mog-$mog" >> "$GITHUB_ENV"
+          echo "LandSandBoat $(git -C lsb log -1 --format='%h %ci %s')"
+
+      - name: Already built?
+        id: built
+        run: |
+          if [ "${{ github.event_name }}" = schedule ] && docker manifest inspect "$IMAGE:$TAG" > /dev/null 2>&1; then
+            echo "$IMAGE:$TAG exists: nothing new"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.built.outputs.skip != 'true'
+        with:
+          python-version: '3.12'
+
+      - name: MogHouse's modules
+        if: steps.built.outputs.skip != 'true'
+        env:
+          BRIDGE_REF: ${{ inputs.bridge_ref || 'main' }}
+        run: |
+          python -m pip install -q jinja2 jsonschema ruamel.yaml
+          mog/tools/assemble.sh lsb
+
+      - name: Room to build
+        if: steps.built.outputs.skip != 'true'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.built.outputs.skip != 'true'
+
+      - uses: docker/login-action@v3
+        if: steps.built.outputs.skip != 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        if: steps.built.outputs.skip != 'true'
+        with:
+          context: lsb
+          file: lsb/docker/ubuntu.Dockerfile
+          push: true
+          build-args: |
+            REPO_URL=${{ env.LSB_REPO }}
+            COMMIT_SHA=${{ env.LSB_COMMIT }}
+          # the image belongs to this repository (GitHub links and publishes it by this label; LandSandBoat's
+          # Dockerfile sets it to LandSandBoat's own)
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=MogHouse's LandSandBoat server
+            cc.moghouse.lsb-commit=${{ env.LSB_COMMIT }}
+            cc.moghouse.revision=${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ env.TAG }}
+
+      - name: Published
+        if: steps.built.outputs.skip != 'true'
+        run: |
+          echo "### $IMAGE:$TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "LandSandBoat $LSB_COMMIT, MogHouse $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
