@@ -17,3 +17,35 @@ moghouse/commands/
 
 # mogKnockback(actor, targetId, knockback, animation): !slap's knockback (C++)
 moghouse/cpp/
+
+# ---------------------------------------------------------------------------------------------------
+# LandSandBoat's other optional modules. Off; to turn one on, take the "# " off its line and push (the
+# image is built, tested, and ffxi-update installs it). Each loaded cleanly on LandSandBoat of
+# September 2026 (tested all at once in xi_test).
+#
+# Players
+# custom/lua/homepoint_heal.lua                  Home Points restore HP and MP, as in single-player FF
+# custom/lua/moghouse_exit_homepoint.lua         after changing jobs, leaving the Mog House asks to set the Home Point
+# custom/lua/new_player_linkshell.lua            new characters get a linkshell (its name in the file)
+# custom/lua/mission_wardrobe_unlocks.lua        Mog Wardrobe slots unlock as missions are completed
+# custom/lua/replace_trust_with_cornelia.lua     one Trust spell (in the file) summons Cornelia instead
+# custom/cpp/ah_announcement.cpp                 a seller online is told when their item sells, to whom, for how much
+# custom/cpp/ah_pagination.cpp                   the Auction House lists more than the game's 7 (pages of 6)
+#
+# The world
+# custom/lua/world_first_announcements.lua       everyone is told of world firsts (first death, level 75 WAR, an NM's first kill...)
+# custom/lua/conquest_regional_npcs_always_up.lua  the regional-goods merchants stay, whatever conquest's results
+# custom/lua/persist_nm_time_of_deaths.lua       listed NMs keep their time of death over a restart (no rush after one)
+# custom/lua/claim_shield.lua                    popular NMs can't be claimed for 5 seconds after they spawn (fairer contests)
+# custom/lua/garrison_placeholder_data.lua       Garrison works, on placeholder data
+# custom/lua/chocobo_raising_qol.lua             Chocobo Raising less of a grind, and better chocobos from it
+# custom/lua/mazurka_generates_enmity.lua        Chocobo/Raptor Mazurka provoke, as for a few days in March 2007
+#
+# Story
+# custom/lua/quest_workarounds.lua               quests blocked by an unfinished system made completable (Wish Upon a Star)
+# custom/lua/soa_remove_imprimatur_gate.lua      Seekers of Adoulin missions without the Imprimatur/fame gates
+# custom/lua/wotg_decouple_story_missions_from_nation_quests.lua  WotG missions without the nation quests
+#
+# Also: custom/lua/custom_hnm_system.lua (Fafnir/Nidhogg, Adamantoise/Aspidochelone, Behemoth/King
+# Behemoth: the NQ kings on timers, HQs from their ???; it turns itself off in the file, setEnabled), and
+# LandSandBoat's era/ modules (the game as it was in an earlier era), listed in its own modules/init.txt.
