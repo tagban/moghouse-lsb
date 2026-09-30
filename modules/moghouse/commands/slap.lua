@@ -43,17 +43,10 @@ commandObj.onTrigger = function(player, target, damage)
 
     -- Prepare the parameters..
     local dmg = damage or 0
-    local msg = 0
-    if dmg > 0 then
-        msg = 1
-    end
 
-    -- Knockback the target..
-    -- TODO(moghouse): entity:knockback() does not exist in current LandSandBoat (only CAction:knockback(),
-    -- used inside ability/skill action handlers, exists), and injectActionPacket
-    -- has no knockback field. There is no clear replacement, so the knockback is disabled and the command
-    -- only does the damage below. The original call was:
-    -- t:knockback(player:getID(), 899, 7, msg, dmg)
+    -- Knockback the target: the strongest (7), with the original's animation (899), through the
+    -- knockback module (modules/moghouse/cpp/knockback.cpp)
+    mogKnockback(player, t:getID(), 7, 899)
 
     -- Damage the target..
     if dmg > 0 then
