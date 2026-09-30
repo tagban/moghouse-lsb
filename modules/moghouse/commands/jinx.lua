@@ -10,7 +10,7 @@
 --   agro (default)  every live mob in the victim's zone claims them and comes for them (power: only
 --                   mobs within that many yalms; 0 or none, the whole zone)
 --   defense         defense down to 1, evasion gone, and physical damage taken multiplied by power
---                   (default 5, at most 20): a level 2 Rarab hurts
+--                   (default 5, at most 16): a level 2 Rarab hurts
 --   crit            crits land on them more, and theirs less (power: %, default 10, at most 80)
 --   speed           slower (power: %, default 10, at most 50)
 --   interrupt       spells interrupted more (power: %, default 25, at most 80)
@@ -67,30 +67,44 @@ local function train(targ, range)
     return count
 end
 
+-- moves a mod by `amount`, keeping its total within lo..hi. Mods are 16-bit (-32768..32767): past that
+-- they wrap around (+40000 is -25536), so a jinx given twice must not push one over.
+local function nudge(targ, mod, amount, lo, hi)
+    local now = targ:getMod(mod)
+    local want = math.max(lo, math.min(hi, now + amount))
+    if want ~= now then
+        targ:addMod(mod, want - now)
+    end
+end
+
 local function defense(targ, power)
-    local times = clamp(power, 5, 20)
-    targ:addMod(xi.mod.DEFP, -100)                    -- defense to 1 (it cannot go lower)
-    targ:addMod(xi.mod.EVA, -999)                     -- every swing lands
-    targ:addMod(xi.mod.UDMGPHYS, (times - 1) * 10000) -- physical damage taken x times (uncapped)
+    local times = clamp(power, 5, 16)
+    nudge(targ, xi.mod.DEFP, -100, -100, 32767) -- defense to 1 (it cannot go lower)
+    nudge(targ, xi.mod.EVA, -999, -9999, 32767) -- every swing lands
+    -- physical damage taken x times: UDMGPHYS (uncapped) to x4, then DMGPHYS (uncapped upward) for the
+    -- rest, as the two multiply; each within 16 bits (a mod of 10000 is +100%)
+    local first = math.min(times, 4)
+    nudge(targ, xi.mod.UDMGPHYS, (first - 1) * 10000, -10000, 30000)
+    nudge(targ, xi.mod.DMGPHYS, math.floor((times / first - 1) * 10000), -10000, 30000)
     return times
 end
 
 local function crit(targ, power)
     local p = clamp(power, 10, 80)
-    targ:addMod(xi.mod.CRITICAL_HIT_EVASION, -p) -- negative: the enemy crits more
-    targ:addMod(xi.mod.CRITHITRATE, -p)
+    nudge(targ, xi.mod.CRITICAL_HIT_EVASION, -p, -100, 32767) -- negative: the enemy crits more
+    nudge(targ, xi.mod.CRITHITRATE, -p, -100, 32767)
     return p
 end
 
 local function speed(targ, power)
     local p = clamp(power, 10, 50)
-    targ:addMod(xi.mod.MOVE_SPEED_WEIGHT_PENALTY, p) -- a multiplicative slow, positive is slower
+    nudge(targ, xi.mod.MOVE_SPEED_WEIGHT_PENALTY, p, -32768, 90) -- a multiplicative slow, positive is slower
     return p
 end
 
 local function interrupt(targ, power)
     local p = clamp(power, 25, 80)
-    targ:addMod(xi.mod.SPELLINTERRUPT, -p) -- positive is less interruption
+    nudge(targ, xi.mod.SPELLINTERRUPT, -p, -100, 32767) -- positive is less interruption
     return p
 end
 
