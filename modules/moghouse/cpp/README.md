@@ -19,11 +19,18 @@ mogKnockback(actor, targetId, knockback, animation)
 The packet is a mob-skill finish (`ActionCategory::MobSkillFinish`) that hits the target with the
 animation and knockback; everyone nearby sees it, the actor too (`CHAR_INRANGE_SELF`).
 
-### Using it on another LandSandBoat server
+## jump.cpp: each /jump to Lua
 
-1. Copy `knockback.cpp` into a module folder, e.g. `modules/custom/cpp/knockback.cpp`.
+The game's `/jump` (the client's packet 0x11D) only plays an animation, which LandSandBoat relays to
+everyone nearby. The module's `OnIncomingPacket` hands each one to `xi.moghouse.onJump(player)` as well
+(`modules/moghouse/jump.lua`: the player lifted a little, so a jump while walking lands them on a rock or
+a step) and lets LandSandBoat go on with it.
+
+### Using them on another LandSandBoat server
+
+1. Copy `knockback.cpp` (or `jump.cpp`, with `jump.lua`) into a module folder, e.g. `modules/custom/cpp/`.
 2. List it in `modules/init.txt`: `custom/cpp/knockback.cpp` (or its folder).
 3. Build the server again (C++ modules are compiled in).
-4. Call `mogKnockback(...)` from Lua.
+4. Call `mogKnockback(...)` from Lua; `jump.cpp` needs `xi.moghouse.onJump` defined (`jump.lua`).
 
 Written for LandSandBoat as of September 2026 (`action_t`, `GP_SERV_COMMAND_BATTLE2`).

@@ -15,8 +15,12 @@ discord_bridge/
 # MogHouse's GM commands (!home, !gmgear, ...)
 moghouse/commands/
 
-# mogKnockback(actor, targetId, knockback, animation): !slap's knockback (C++)
+# mogKnockback(actor, targetId, knockback, animation): !slap's knockback; and each /jump handed to
+# xi.moghouse.onJump (C++)
 moghouse/cpp/
+
+# /jump leaves the ground a little: onto a rock, a step (with moghouse/cpp/jump.cpp)
+moghouse/jump.lua
 
 # ---------------------------------------------------------------------------------------------------
 # LandSandBoat's other optional modules. Off; to turn one on, take the "# " off its line and push (the
