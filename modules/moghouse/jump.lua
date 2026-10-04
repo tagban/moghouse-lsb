@@ -19,7 +19,7 @@ xi.moghouse = xi.moghouse or {}
 xi.moghouse.jump =
 {
     AHEAD     = { 2.5, 3.0, 3.5 }, -- yalms in front where a leap may land
-    MAX_RISE  = 3.5,  -- the highest a leap lands above where it started (a Bastok Markets ledge: 2.14)
+    MAX_RISE  = 4.0,  -- the highest a leap lands above where it started (a Bastok Markets ledge: 2.14)
     MAX_DROP  = 6.0,  -- the lowest below
     STEP      = 0.4,  -- a floor ahead nearer than this to where they stand: flat, a hop in place
     PEAK      = 2.0,  -- a leap's top, above the higher of the two floors

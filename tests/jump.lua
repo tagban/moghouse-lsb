@@ -28,7 +28,7 @@ describe('MogHouse /jump', function()
         local asked = {}
         leapTo = function(p, ahead, maxRise, maxDrop)
             table.insert(asked, ahead)
-            assert(maxRise == 3.5, 'the leap asked for the wrong rise')
+            assert(maxRise == 4.0, 'the leap asked for the wrong rise')
             if ahead < 3.0 then
                 return x + ahead, y, z -- the street before the ledge
             end
