@@ -18,13 +18,13 @@ xi.moghouse = xi.moghouse or {}
 
 xi.moghouse.jump =
 {
-    AHEAD     = { 2.0, 2.5, 3.0 }, -- yalms in front where a leap may land
-    MAX_RISE  = 3.0,  -- the highest a leap lands above where it started (a Bastok Markets ledge: 2.14)
+    AHEAD     = { 2.5, 3.0, 3.5 }, -- yalms in front where a leap may land
+    MAX_RISE  = 3.5,  -- the highest a leap lands above where it started (a Bastok Markets ledge: 2.14)
     MAX_DROP  = 6.0,  -- the lowest below
     STEP      = 0.4,  -- a floor ahead nearer than this to where they stand: flat, a hop in place
-    PEAK      = 1.5,  -- a leap's top, above the higher of the two floors
+    PEAK      = 2.0,  -- a leap's top, above the higher of the two floors
     LAND_MS   = 250,  -- from the top of a leap to landing
-    HOP       = 2.0,  -- a hop's lift, where there is nowhere to leap to
+    HOP       = 2.5,  -- a hop's lift, where there is nowhere to leap to
     SETTLE_MS = 700,  -- a hop still hanging after this long: back down
     BUSY_VAR  = '[mogJump]busy',
 }

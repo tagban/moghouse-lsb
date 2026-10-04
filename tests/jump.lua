@@ -5,7 +5,7 @@
 -----------------------------------
 
 describe('MogHouse /jump', function()
-    local LIFT = 2.0
+    local LIFT = 2.5
 
     -- mogLeapTarget, as the C++ module answers: nowhere to leap (a hop), unless a test says
     local leapTo
@@ -28,26 +28,26 @@ describe('MogHouse /jump', function()
         local asked = {}
         leapTo = function(p, ahead, maxRise, maxDrop)
             table.insert(asked, ahead)
-            assert(maxRise == 3.0, 'the leap asked for the wrong rise')
-            if ahead < 2.5 then
+            assert(maxRise == 3.5, 'the leap asked for the wrong rise')
+            if ahead < 3.0 then
                 return x + ahead, y, z -- the street before the ledge
             end
 
-            return x + 2.5, y - 2, z -- a ledge 2 yalms up, 2.5 ahead
+            return x + 3.0, y - 2, z -- a ledge 2 yalms up, 3 ahead
         end
 
         xi.moghouse.onJump(player)
         assert(#asked == 3, string.format('asked %d distances, not 3', #asked))
-        assert(math.abs(player:getYPos() - (y - 3.5)) < 0.01,
-            string.format('at the top %.3f, not 1.5 yalms over the ledge (%.3f)', player:getYPos(), y - 3.5))
-        assert(math.abs(player:getXPos() - (x + 1.25)) < 0.01, 'not halfway over at the top')
+        assert(math.abs(player:getYPos() - (y - 4)) < 0.01,
+            string.format('at the top %.3f, not 2 yalms over the ledge (%.3f)', player:getYPos(), y - 4))
+        assert(math.abs(player:getXPos() - (x + 1.5)) < 0.01, 'not halfway over at the top')
 
         for _ = 1, 3 do
             xi.test.world:skipTime(1)
             xi.test.world:tickEntity(player)
         end
 
-        assert(math.abs(player:getYPos() - (y - 2)) < 0.01 and math.abs(player:getXPos() - (x + 2.5)) < 0.01,
+        assert(math.abs(player:getYPos() - (y - 2)) < 0.01 and math.abs(player:getXPos() - (x + 3.0)) < 0.01,
             string.format('landed at %.3f, %.3f, not on the ledge', player:getXPos(), player:getYPos()))
         assert(player:getLocalVar(xi.moghouse.jump.BUSY_VAR) == 0, 'the next jump is held back')
     end)
