@@ -25,7 +25,8 @@ xi.moghouse.jump =
     PEAK      = 2.0,  -- a leap's top, above the higher of the two floors
     LAND_MS   = 250,  -- from the top of a leap to landing
     HOP       = 2.5,  -- a hop's lift, where there is nowhere to leap to
-    SETTLE_MS = 700,  -- a hop still hanging after this long: back down
+    SETTLE_MS = 100,  -- a hop still hanging after this long: back down (at the server's next tick,
+                      -- 0.4 seconds apart: so the next one)
     BUSY_VAR  = '[mogJump]busy',
 }
 
