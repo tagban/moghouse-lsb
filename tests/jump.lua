@@ -52,7 +52,7 @@ describe('MogHouse /jump', function()
         assert(player:getLocalVar(xi.moghouse.jump.BUSY_VAR) == 0, 'the next jump is held back')
     end)
 
-    it('hops in place on flat ground, not along it', function()
+    it('carries the player forward on flat ground, as far as it can', function()
         local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75 })
         local x, y = player:getXPos(), player:getYPos()
         leapTo = function(p, ahead)
@@ -60,7 +60,21 @@ describe('MogHouse /jump', function()
         end
 
         xi.moghouse.onJump(player)
-        assert(math.abs(player:getXPos() - x) < 0.01, 'a jump on flat ground moved the player along')
+        for _ = 1, 3 do
+            xi.test.world:skipTime(1)
+            xi.test.world:tickEntity(player)
+        end
+
+        assert(math.abs(player:getXPos() - (x + 3.5)) < 0.01,
+            string.format('landed %.2f along, not the farthest 3.5', player:getXPos() - x))
+    end)
+
+    it('hops in place where there is nowhere ahead to land', function()
+        local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75 })
+        local x, y = player:getXPos(), player:getYPos()
+
+        xi.moghouse.onJump(player) -- the stand-in finds nothing (a wall)
+        assert(math.abs(player:getXPos() - x) < 0.01, 'moved along with nowhere to land')
         assert(math.abs(player:getYPos() - (y - LIFT)) < 0.01, 'not lifted in place')
     end)
 

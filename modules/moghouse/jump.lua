@@ -6,8 +6,9 @@
 --
 -- A leap: where there is a floor a little way ahead (mogLeapTarget, the zone's own collision: at most
 -- MAX_RISE above, any way below within MAX_DROP, with nothing in the way), the player arcs onto it: up
--- and over, then down on it. Of the floors at each distance in AHEAD, the highest: by a ledge, onto the
--- ledge, not a step along the ground before it. Elsewhere, a hop: lifted a little, as !up lifts them, and set back down if
+-- and over, then down on it. Of the floors at each distance in AHEAD, the highest (by a ledge, onto
+-- the ledge, not a step along the ground before it); with none clearly higher, the farthest (a jump
+-- carries the player forward). Elsewhere, a hop: lifted a little, as !up lifts them, and set back down if
 -- still hanging there a moment later. One jump at a time: they never stack into flying.
 -- Heights count down in the game: up is less.
 -----------------------------------
@@ -21,7 +22,7 @@ xi.moghouse.jump =
     AHEAD     = { 2.5, 3.0, 3.5 }, -- yalms in front where a leap may land
     MAX_RISE  = 4.0,  -- the highest a leap lands above where it started (a Bastok Markets ledge: 2.14)
     MAX_DROP  = 6.0,  -- the lowest below
-    STEP      = 0.4,  -- a floor ahead nearer than this to where they stand: flat, a hop in place
+    STEP      = 0.4,  -- a floor ahead higher than this above where they stand: a ledge, taken first
     PEAK      = 2.0,  -- a leap's top, above the higher of the two floors
     LAND_MS   = 250,  -- from the top of a leap to landing
     HOP       = 2.5,  -- a hop's lift, where there is nowhere to leap to
@@ -48,14 +49,23 @@ xi.moghouse.onJump = function(player)
     local x, y, z, rot = player:getXPos(), player:getYPos(), player:getZPos(), player:getRotPos()
     player:setLocalVar(j.BUSY_VAR, 1)
 
-    local tx, ty, tz
+    local tx, ty, tz -- the highest ledge ahead
+    local fx, fy, fz -- else the farthest floor ahead
     if mogLeapTarget then
         for _, ahead in ipairs(j.AHEAD) do
             local cx, cy, cz = mogLeapTarget(player, ahead, j.MAX_RISE, j.MAX_DROP)
-            if cx and math.abs(cy - y) > j.STEP and (not ty or cy < ty - 0.05) then -- higher (less) by more than a slope's wobble
-                tx, ty, tz = cx, cy, cz
+            if cx then
+                if y - cy > j.STEP and (not ty or cy < ty - 0.05) then -- higher (less) by more than a slope's wobble
+                    tx, ty, tz = cx, cy, cz
+                end
+
+                fx, fy, fz = cx, cy, cz -- AHEAD goes nearest to farthest
             end
         end
+    end
+
+    if not tx then
+        tx, ty, tz = fx, fy, fz
     end
 
     if tx then
