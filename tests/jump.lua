@@ -69,6 +69,22 @@ describe('MogHouse /jump', function()
             string.format('landed %.2f along, not the farthest 3.5', player:getXPos() - x))
     end)
 
+    it('carries a running jump further', function()
+        local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75 })
+        local x, y = player:getXPos(), player:getYPos()
+        local real = rawget(_G, 'mogSpeed')
+        rawset(_G, 'mogSpeed', function() return 5.0 end) -- running: 5 yalms a second
+        local farthest = 0
+        leapTo = function(p, ahead)
+            farthest = math.max(farthest, ahead)
+            return x + ahead, y - 0.1, player:getZPos()
+        end
+
+        xi.moghouse.onJump(player)
+        rawset(_G, 'mogSpeed', real)
+        assert(math.abs(farthest - 6.5) < 0.01, string.format('looked %.2f ahead running, not 3.5 + 5 x 0.6', farthest))
+    end)
+
     it('hops in place where there is nowhere ahead to land', function()
         local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75 })
         local x, y = player:getXPos(), player:getYPos()

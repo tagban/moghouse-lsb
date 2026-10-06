@@ -15,6 +15,13 @@
 //   invisible barriers) at the height of a body over the higher of the two floors; else nothing.
 //   Heights count down in the game: up is less.
 //
+//   And how fast they are going, for a running jump to carry further:
+//
+//       speed = mogSpeed(player)
+//
+//   yalms a second along the ground, from their last two position reports (the client's 0x015), as
+//   the server received them; 0 when they are standing, or the reports are a second and a half old.
+//
 
 #include "common/utils.h"
 #include "map/entities/char_entity.h"
@@ -25,10 +32,26 @@
 #include "map/ximesh/ximesh.h"
 #include "map/zone.h"
 
+#include <chrono>
+#include <cmath>
+#include <unordered_map>
+
 namespace
 {
 
 constexpr float BODY = 2.0f; // a body's height (LandSandBoat's ENTITY_HEIGHT)
+
+// each player's last two position reports: where along the ground, and when
+struct Report
+{
+    float                                 x{}, z{};
+    std::chrono::steady_clock::time_point at{};
+};
+struct Reports
+{
+    Report last, before;
+};
+std::unordered_map<uint32, Reports> reports;
 
 auto blocked(const XiMesh* mesh, float x0, float y0, float z0, float x1, float y1, float z1) -> bool
 {
@@ -106,10 +129,48 @@ class JumpModule : public CPPModule
                              out.push_back(sol::make_object(::lua, to.z));
                              return out;
                          });
+
+        lua.set_function("mogSpeed",
+                         [](CLuaBaseEntity* PLuaPlayer) -> float
+                         {
+                             CBaseEntity* PEntity = PLuaPlayer ? PLuaPlayer->GetBaseEntity() : nullptr;
+                             const auto   it      = PEntity ? reports.find(PEntity->id) : reports.end();
+                             if (it == reports.end())
+                             {
+                                 return 0.0f;
+                             }
+
+                             const auto&  r   = it->second;
+                             const auto   now = std::chrono::steady_clock::now();
+                             const double dt  = std::chrono::duration<double>(r.last.at - r.before.at).count();
+                             if (r.before.at.time_since_epoch().count() == 0 || dt <= 0.05 || dt > 1.5 ||
+                                 std::chrono::duration<double>(now - r.last.at).count() > 1.5)
+                             {
+                                 return 0.0f;
+                             }
+
+                             const float dx = r.last.x - r.before.x, dz = r.last.z - r.before.z;
+                             return static_cast<float>(std::sqrt(dx * dx + dz * dz) / dt);
+                         });
+    }
+
+    void OnCharZoneOut(CCharEntity* PChar) override
+    {
+        if (PChar)
+        {
+            reports.erase(PChar->id);
+        }
     }
 
     auto OnIncomingPacket(MapSession* session, CCharEntity* PChar, CBasicPacket& packet) -> bool override
     {
+        if (PChar && packet.getType() == 0x015)
+        {
+            auto& r  = reports[PChar->id];
+            r.before = r.last;
+            r.last   = Report{ packet.ref<float>(0x04), packet.ref<float>(0x0C), std::chrono::steady_clock::now() };
+        }
+
         if (PChar && packet.getType() == 0x11D)
         {
             luautils::callGlobal<void>("xi.moghouse.onJump", PChar);

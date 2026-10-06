@@ -19,7 +19,9 @@ xi.moghouse = xi.moghouse or {}
 
 xi.moghouse.jump =
 {
-    AHEAD     = { 2.5, 3.0, 3.5 }, -- yalms in front where a leap may land
+    AHEAD     = { 2.5, 3.0, 3.5 }, -- yalms in front where a leap may land, standing
+    AIR       = 0.6,  -- running, the leap carries a further speed x AIR yalms (mogSpeed, the C++ module)
+    MAX_CARRY = 6.0,  -- at most this much further
     MAX_RISE  = 4.0,  -- the highest a leap lands above where it started (a Bastok Markets ledge: 2.14)
     MAX_DROP  = 6.0,  -- the lowest below
     STEP      = 0.4,  -- a floor ahead higher than this above where they stand: a ledge, taken first
@@ -51,9 +53,10 @@ xi.moghouse.onJump = function(player)
 
     local tx, ty, tz -- the highest ledge ahead
     local fx, fy, fz -- else the farthest floor ahead
+    local carry = mogSpeed and math.min(mogSpeed(player) * j.AIR, j.MAX_CARRY) or 0
     if mogLeapTarget then
         for _, ahead in ipairs(j.AHEAD) do
-            local cx, cy, cz = mogLeapTarget(player, ahead, j.MAX_RISE, j.MAX_DROP)
+            local cx, cy, cz = mogLeapTarget(player, ahead + carry, j.MAX_RISE, j.MAX_DROP)
             if cx then
                 if y - cy > j.STEP and (not ty or cy < ty - 0.05) then -- higher (less) by more than a slope's wobble
                     tx, ty, tz = cx, cy, cz
