@@ -35,6 +35,17 @@ commandObj.flyers = FLYERS
 commandObj.onTrigger = function(player, target)
     -- The old name flag 0x200 was the wallhack flag, now its own getter/setter.
     if player:getWallhack() then
+        -- down on the nearest floor (mogGround, the C++ module: the collision below, else the navmesh's
+        -- nearest walkable point), then the wallhack off
+        local gx, gy, gz
+        if mogGround then
+            gx, gy, gz = mogGround(player)
+        end
+
+        if gx then
+            player:setPos(gx, gy, gz, player:getRotPos())
+        end
+
         player:setWallhack(false)
         -- TODO(moghouse): the old code set a literal speed of 90 here ("speed normal"); 0 clears the
         -- override so the player returns to the server's regular speed (map.BASE_SPEED) instead.

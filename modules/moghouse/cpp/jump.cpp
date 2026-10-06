@@ -15,6 +15,13 @@
 //   invisible barriers) at the height of a body over the higher of the two floors; else nothing.
 //   Heights count down in the game: up is less.
 //
+//   Where a flier lands (!fly, off):
+//
+//       x, y, z = mogGround(player)
+//
+//   the floor straight below them in the zone's collision (within 200 yalms); with none (over water,
+//   off the edge), the nearest walkable point of the zone's navmesh; else nothing.
+//
 //   And how fast they are going, for a running jump to carry further:
 //
 //       speed = mogSpeed(player)
@@ -29,6 +36,7 @@
 #include "map/lua/luautils.h"
 #include "map/packets/basic.h"
 #include "map/utils/moduleutils.h"
+#include "map/navmesh/navmesh.h"
 #include "map/ximesh/ximesh.h"
 #include "map/zone.h"
 
@@ -127,6 +135,46 @@ class JumpModule : public CPPModule
                              out.push_back(sol::make_object(::lua, to.x));
                              out.push_back(sol::make_object(::lua, *floor));
                              out.push_back(sol::make_object(::lua, to.z));
+                             return out;
+                         });
+
+        lua.set_function("mogGround",
+                         [](CLuaBaseEntity* PLuaPlayer) -> sol::variadic_results
+                         {
+                             sol::variadic_results out;
+                             CBaseEntity*          PEntity = PLuaPlayer ? PLuaPlayer->GetBaseEntity() : nullptr;
+                             if (!PEntity || !PEntity->loc.zone)
+                             {
+                                 return out;
+                             }
+
+                             position_t p     = PEntity->loc.p;
+                             const auto put   = [&](float x, float y, float z)
+                             {
+                                 out.push_back(sol::make_object(::lua, x));
+                                 out.push_back(sol::make_object(::lua, y));
+                                 out.push_back(sol::make_object(::lua, z));
+                             };
+                             const XiMesh* mesh = PEntity->loc.zone->xiMesh();
+                             if (mesh)
+                             {
+                                 // from a little above their feet (heights count down), down 200 yalms
+                                 if (const auto floor = floorAt(mesh, p.x, p.z, p.y - 0.5f, p.y + 200.0f))
+                                 {
+                                     put(p.x, *floor, p.z);
+                                     return out;
+                                 }
+                             }
+
+                             NavMesh* nav = PEntity->loc.zone->navMesh();
+                             if (nav)
+                             {
+                                 if (const auto near = nav->findClosestValidPoint(p))
+                                 {
+                                     put(near->x, near->y, near->z);
+                                 }
+                             }
+
                              return out;
                          });
 

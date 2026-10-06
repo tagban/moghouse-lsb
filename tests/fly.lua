@@ -19,8 +19,12 @@ describe('MogHouse !fly', function()
 
         assert(known, string.format('costume %d is not one of the fliers', costume))
 
+        local real = rawget(_G, 'mogGround')
+        rawset(_G, 'mogGround', function(p) return p:getXPos(), y, p:getZPos() end) -- the floor below, as the C++ finds it
         xi.commands.fly.onTrigger(player)
+        rawset(_G, 'mogGround', real)
         assert(not player:getWallhack(), 'still flying after the second !fly')
+        assert(math.abs(player:getYPos() - y) < 0.01, string.format('landed at %.2f, not on the ground at %.2f', player:getYPos(), y))
         assert(player:getCostume() == 0, 'still in costume')
     end)
 end)
