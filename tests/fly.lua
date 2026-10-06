@@ -1,0 +1,26 @@
+-----------------------------------
+-- MogHouse's !fly (modules/moghouse/commands/fly.lua), run in LandSandBoat's xi_test.
+-----------------------------------
+
+describe('MogHouse !fly', function()
+    it('takes off from where the player stands, as one of the fliers, and lands again', function()
+        local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75 })
+        player:setGMLevel(5)
+        local y = player:getYPos()
+
+        xi.commands.fly.onTrigger(player)
+        assert(player:getWallhack(), 'no wallhack flag: the client would put them back down')
+        assert(math.abs(player:getYPos() - (y - 3)) < 0.01, string.format('at %.2f, not 3 up from %.2f', player:getYPos(), y))
+
+        local costume, known = player:getCostume(), false
+        for _, f in ipairs(xi.commands.fly.flyers) do
+            known = known or f[1] == costume
+        end
+
+        assert(known, string.format('costume %d is not one of the fliers', costume))
+
+        xi.commands.fly.onTrigger(player)
+        assert(not player:getWallhack(), 'still flying after the second !fly')
+        assert(player:getCostume() == 0, 'still in costume')
+    end)
+end)
