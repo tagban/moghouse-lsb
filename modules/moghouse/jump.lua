@@ -1,15 +1,14 @@
 -----------------------------------
 -- A jump that leaves the ground (MogHouse)
 --
--- The game's /jump (Space, with the MogHouse launcher's overlay) only plays an animation.
+-- The game's /jump (J, with the MogHouse launcher) only plays an animation.
 -- modules/moghouse/cpp/jump.cpp hands each one here.
 --
--- A leap: where there is a floor a little way ahead (mogLeapTarget, the zone's own collision: at most
--- MAX_RISE above, any way below within MAX_DROP, with nothing in the way), the player arcs onto it: up
--- and over, then down on it. Of the floors at each distance in AHEAD, the highest (by a ledge, onto
--- the ledge, not a step along the ground before it); with none clearly higher, the farthest (a jump
--- carries the player forward). Elsewhere, a hop: lifted a little, as !up lifts them, and set back down if
--- still hanging there a moment later. One jump at a time: they never stack into flying.
+-- A jump is a hop: lifted a little, as !up lifts them, and set back down if still hanging there a
+-- moment later. Unless there is a higher floor within 3 yalms ahead (mogLeapTarget, the zone's own
+-- collision: at most MAX_RISE above, with nothing in the way): then a leap onto it, up and over, then
+-- down on it; of those at each distance in AHEAD, the highest. One jump at a time: they never stack
+-- into flying.
 -- Heights count down in the game: up is less.
 -----------------------------------
 require('modules/module_utils')
@@ -19,12 +18,9 @@ xi.moghouse = xi.moghouse or {}
 
 xi.moghouse.jump =
 {
-    AHEAD     = { 2.5, 3.0, 3.5 }, -- yalms in front where a leap may land, standing
-    AIR       = 0.6,  -- running, the leap carries a further speed x AIR yalms (mogSpeed, the C++ module)
-    MAX_CARRY = 6.0,  -- at most this much further
-    MAX_RISE  = 4.0,  -- the highest a leap lands above where it started (a Bastok Markets ledge: 2.14)
-    MAX_DROP  = 6.0,  -- the lowest below
-    STEP      = 0.4,  -- a floor ahead higher than this above where they stand: a ledge, taken first
+    AHEAD     = { 1.0, 1.5, 2.0, 2.5, 3.0 }, -- yalms in front where a higher floor is looked for
+    MAX_RISE  = 6.0,  -- the highest a leap lands above where it started (a Bastok Markets ledge: 2.14)
+    STEP      = 0.4,  -- a floor ahead higher than this above where they stand: a ledge to leap onto
     PEAK      = 2.0,  -- a leap's top, above the higher of the two floors
     LAND_MS   = 250,  -- from the top of a leap to landing
     HOP       = 2.5,  -- a hop's lift, where there is nowhere to leap to
@@ -52,23 +48,13 @@ xi.moghouse.onJump = function(player)
     player:setLocalVar(j.BUSY_VAR, 1)
 
     local tx, ty, tz -- the highest ledge ahead
-    local fx, fy, fz -- else the farthest floor ahead
-    local carry = mogSpeed and math.min(mogSpeed(player) * j.AIR, j.MAX_CARRY) or 0
     if mogLeapTarget then
         for _, ahead in ipairs(j.AHEAD) do
-            local cx, cy, cz = mogLeapTarget(player, ahead + carry, j.MAX_RISE, j.MAX_DROP)
-            if cx then
-                if y - cy > j.STEP and (not ty or cy < ty - 0.05) then -- higher (less) by more than a slope's wobble
-                    tx, ty, tz = cx, cy, cz
-                end
-
-                fx, fy, fz = cx, cy, cz -- AHEAD goes nearest to farthest
+            local cx, cy, cz = mogLeapTarget(player, ahead, j.MAX_RISE, 0)
+            if cx and y - cy > j.STEP and (not ty or cy < ty - 0.05) then -- higher (less) by more than a slope's wobble
+                tx, ty, tz = cx, cy, cz
             end
         end
-    end
-
-    if not tx then
-        tx, ty, tz = fx, fy, fz
     end
 
     if tx then

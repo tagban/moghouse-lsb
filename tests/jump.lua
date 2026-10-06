@@ -28,7 +28,7 @@ describe('MogHouse /jump', function()
         local asked = {}
         leapTo = function(p, ahead, maxRise, maxDrop)
             table.insert(asked, ahead)
-            assert(maxRise == 4.0, 'the leap asked for the wrong rise')
+            assert(maxRise == 6.0, 'the leap asked for the wrong rise')
             if ahead < 3.0 then
                 return x + ahead, y, z -- the street before the ledge
             end
@@ -37,7 +37,7 @@ describe('MogHouse /jump', function()
         end
 
         xi.moghouse.onJump(player)
-        assert(#asked == 3, string.format('asked %d distances, not 3', #asked))
+        assert(#asked == 5, string.format('asked %d distances, not 5', #asked))
         assert(math.abs(player:getYPos() - (y - 4)) < 0.01,
             string.format('at the top %.3f, not 2 yalms over the ledge (%.3f)', player:getYPos(), y - 4))
         assert(math.abs(player:getXPos() - (x + 1.5)) < 0.01, 'not halfway over at the top')
@@ -52,7 +52,7 @@ describe('MogHouse /jump', function()
         assert(player:getLocalVar(xi.moghouse.jump.BUSY_VAR) == 0, 'the next jump is held back')
     end)
 
-    it('carries the player forward on flat ground, as far as it can', function()
+    it('hops in place on flat ground, not along it', function()
         local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75 })
         local x, y = player:getXPos(), player:getYPos()
         leapTo = function(p, ahead)
@@ -60,29 +60,8 @@ describe('MogHouse /jump', function()
         end
 
         xi.moghouse.onJump(player)
-        for _ = 1, 3 do
-            xi.test.world:skipTime(1)
-            xi.test.world:tickEntity(player)
-        end
-
-        assert(math.abs(player:getXPos() - (x + 3.5)) < 0.01,
-            string.format('landed %.2f along, not the farthest 3.5', player:getXPos() - x))
-    end)
-
-    it('carries a running jump further', function()
-        local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75 })
-        local x, y = player:getXPos(), player:getYPos()
-        local real = rawget(_G, 'mogSpeed')
-        rawset(_G, 'mogSpeed', function() return 5.0 end) -- running: 5 yalms a second
-        local farthest = 0
-        leapTo = function(p, ahead)
-            farthest = math.max(farthest, ahead)
-            return x + ahead, y - 0.1, player:getZPos()
-        end
-
-        xi.moghouse.onJump(player)
-        rawset(_G, 'mogSpeed', real)
-        assert(math.abs(farthest - 6.5) < 0.01, string.format('looked %.2f ahead running, not 3.5 + 5 x 0.6', farthest))
+        assert(math.abs(player:getXPos() - x) < 0.01, 'a jump on flat ground moved the player along')
+        assert(math.abs(player:getYPos() - (y - LIFT)) < 0.01, 'not lifted in place')
     end)
 
     it('hops in place where there is nowhere ahead to land', function()
