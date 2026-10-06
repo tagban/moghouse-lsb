@@ -26,6 +26,11 @@ everyone nearby. The module's `OnIncomingPacket` hands each one to `xi.moghouse.
 (`modules/moghouse/jump.lua`: the player lifted a little, so a jump while walking lands them on a rock or
 a step) and lets LandSandBoat go on with it.
 
+It also holds `!fly`'s fliers to the zone's collision: while the local var `[mogFly]on` is 1, a position
+report (0x015) whose move goes through a wall or down through the ground is not taken, and
+`xi.moghouse.onFlyBlocked(player, x, y, z)` (`commands/fly.lua`) sets them back where they were. A
+player whose own wallhack was on when they took off (`[mogFly]on` 2) goes through anything.
+
 ### Using them on another LandSandBoat server
 
 1. Copy `knockback.cpp` (or `jump.cpp`, with `jump.lua`) into a module folder, e.g. `modules/custom/cpp/`.

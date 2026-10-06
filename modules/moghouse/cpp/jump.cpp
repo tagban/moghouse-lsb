@@ -22,6 +22,10 @@
 //   the floor straight below them in the zone's collision (within 200 yalms); with none (over water,
 //   off the edge), the nearest walkable point of the zone's navmesh; else nothing.
 //
+//   While flying (!fly sets the local var [mogFly]on to 1), each position report is checked against
+//   the zone's collision: through a wall, or down through the ground, and it is not taken; Lua's
+//   xi.moghouse.onFlyBlocked(player, x, y, z) sets them back where they were.
+//
 //   And how fast they are going, for a running jump to carry further:
 //
 //       speed = mogSpeed(player)
@@ -212,6 +216,25 @@ class JumpModule : public CPPModule
 
     auto OnIncomingPacket(MapSession* session, CCharEntity* PChar, CBasicPacket& packet) -> bool override
     {
+        // A flier (!fly, without their own wallhack) is held to the zone's collision: a move that goes
+        // through a wall or down through the ground, its line at their feet as it was and as reported,
+        // is not taken, and they are set back where they were (xi.moghouse.onFlyBlocked, in Lua). The
+        // wallhack flag itself only keeps the client from putting them back on the ground.
+        if (PChar && packet.getType() == 0x015 && PChar->wallhackEnabled && PChar->GetLocalVar("[mogFly]on") == 1 && PChar->loc.zone &&
+            PChar->loc.zone->xiMesh())
+        {
+            constexpr float  LIFT = 0.5f; // the line's height above their feet: heights count down
+            const position_t from = PChar->loc.p;
+            const float      x = packet.ref<float>(0x04), y = packet.ref<float>(0x08), z = packet.ref<float>(0x0C);
+            const float      dx = x - from.x, dy = y - from.y, dz = z - from.z;
+            if (dx * dx + dy * dy + dz * dz > 0.0001f &&
+                blocked(PChar->loc.zone->xiMesh(), from.x, from.y - LIFT, from.z, x, y - LIFT, z))
+            {
+                luautils::callGlobal<void>("xi.moghouse.onFlyBlocked", PChar, from.x, from.y, from.z);
+                return true; // not taken
+            }
+        }
+
         if (PChar && packet.getType() == 0x015)
         {
             auto& r  = reports[PChar->id];

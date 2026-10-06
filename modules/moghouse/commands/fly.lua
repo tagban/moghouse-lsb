@@ -30,32 +30,51 @@ local FLYERS =
 
 local TAKE_OFF = 3.0 -- yalms up from where they stand (a height in the game counts down: up is less)
 
+-- 1: flying, held to walls and the ground (modules/moghouse/cpp/jump.cpp checks each move);
+-- 2: flying with their own wallhack, already on at take-off: through anything, and it stays on
+local FLY_VAR = '[mogFly]on'
+
 commandObj.flyers = FLYERS
+commandObj.FLY_VAR = FLY_VAR
+
+xi = xi or {}
+xi.moghouse = xi.moghouse or {}
+
+-- a flier's move through a wall or the ground, not taken (jump.cpp): back where they were
+xi.moghouse.onFlyBlocked = function(player, x, y, z)
+    player:setPos(x, y, z, player:getRotPos())
+end
 
 commandObj.onTrigger = function(player, target)
-    -- The old name flag 0x200 was the wallhack flag, now its own getter/setter.
-    if player:getWallhack() then
-        -- down on the nearest floor (mogGround, the C++ module: the collision below, else the navmesh's
-        -- nearest walkable point), then the wallhack off
-        local gx, gy, gz
-        if mogGround then
-            gx, gy, gz = mogGround(player)
+    local flying = player:getLocalVar(FLY_VAR)
+    if flying ~= 0 then
+        if flying == 1 then
+            -- down on the nearest floor (mogGround, the C++ module: the collision below, else the
+            -- navmesh's nearest walkable point), then the wallhack off
+            local gx, gy, gz
+            if mogGround then
+                gx, gy, gz = mogGround(player)
+            end
+
+            if gx then
+                player:setPos(gx, gy, gz, player:getRotPos())
+            end
+
+            player:setWallhack(false)
         end
 
-        if gx then
-            player:setPos(gx, gy, gz, player:getRotPos())
-        end
-
-        player:setWallhack(false)
-        -- TODO(moghouse): the old code set a literal speed of 90 here ("speed normal"); 0 clears the
-        -- override so the player returns to the server's regular speed (map.BASE_SPEED) instead.
+        player:setLocalVar(FLY_VAR, 0)
+        -- 0 clears the speed override: the server's regular speed (map.BASE_SPEED)
         setSpeed(player, 0)
         player:setCostume(0)
-        player:printToPlayer('Fly turned off, wallhack off, speed normal, Costume off!.')
+        player:printToPlayer(flying == 1 and 'You land. Fly off, speed normal, costume off.' or
+            'Fly off, speed normal, costume off. Your own wallhack is still on.')
     else
-        -- the wallhack flag keeps the client from putting them back on the ground; with the MogHouse
-        -- launcher, Space rises, X sinks, and moving climbs or dives the way the camera looks
+        -- the wallhack flag keeps the client from putting them back on the ground; walls and the ground
+        -- still stop them (jump.cpp), unless the wallhack was theirs already. With the MogHouse
+        -- launcher, Space rises, X sinks, and moving climbs or dives the way the camera looks.
         local flier = FLYERS[math.random(#FLYERS)]
+        player:setLocalVar(FLY_VAR, player:getWallhack() and 2 or 1)
         player:setWallhack(true)
         player:setPos(player:getXPos(), player:getYPos() - TAKE_OFF, player:getZPos(), player:getRotPos())
         setSpeed(player, 220)
