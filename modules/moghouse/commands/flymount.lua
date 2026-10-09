@@ -22,11 +22,19 @@ local MOUNT_VAR = '[mogFly]mount'  -- 1: this flight mounted them, so landing ge
 commandObj.FLY_VAR = FLY_VAR
 commandObj.MOUNT_VAR = MOUNT_VAR
 
--- Speed is forced with the MOVE_SPEED_OVERRIDE mod, as !fly does it
-local function setSpeed(player, speed)
-    player:setMod(xi.mod.MOVE_SPEED_OVERRIDE, speed)
+local FLY_SPEED = 220 -- as !fly's
+
+-- A mounted player's speed is the mount's alone (CBattleEntity::UpdateSpeed: map.MOUNT_SPEED / 2, times
+-- 1 + MOUNT_MOVE / 100), so the MOVE_SPEED_OVERRIDE !fly and !speed use does nothing on a chocobo:
+-- MOUNT_MOVE takes it there instead (0: the mount's own speed again)
+local function setMountSpeed(player, speed)
+    local mountSpeed = (xi.settings and xi.settings.map and xi.settings.map.MOUNT_SPEED) or 80
+    local base = math.max(1, math.floor(mountSpeed / 2))
+    player:setMod(xi.mod.MOUNT_MOVE, speed > 0 and math.floor((speed / base - 1) * 100) or 0)
     player:recalculateStats()
 end
+
+commandObj.FLY_SPEED = FLY_SPEED
 
 commandObj.onTrigger = function(player)
     local flying = player:getLocalVar(FLY_VAR)
@@ -46,7 +54,7 @@ commandObj.onTrigger = function(player)
         end
 
         player:setLocalVar(FLY_VAR, 0)
-        setSpeed(player, 0)
+        setMountSpeed(player, 0)
         if player:getLocalVar(MOUNT_VAR) == 1 then
             player:delStatusEffectSilent(xi.effect.MOUNTED)
         end
@@ -67,7 +75,7 @@ commandObj.onTrigger = function(player)
     player:setLocalVar(FLY_VAR, player:getWallhack() and 2 or 1)
     player:setWallhack(true)
     player:setPos(player:getXPos(), player:getYPos() - TAKE_OFF, player:getZPos(), player:getRotPos())
-    setSpeed(player, 220)
+    setMountSpeed(player, FLY_SPEED)
     player:printToPlayer('Your chocobo spreads its wings and takes off! (MogHouse launcher: Space rises, X sinks.)')
 end
 

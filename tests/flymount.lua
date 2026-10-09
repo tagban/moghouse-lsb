@@ -13,6 +13,7 @@ describe('MogHouse !flymount', function()
         assert(player:getWallhack(), 'no wallhack flag: the client would put them back down')
         assert(math.abs(player:getYPos() - (y - 3)) < 0.01, string.format('at %.2f, not 3 up from %.2f', player:getYPos(), y))
         assert(player:getCostume() == 0, 'in a costume, which would hide the chocobo')
+        assert(player:getMod(xi.mod.MOUNT_MOVE) > 100, string.format('the mount not sped up (MOUNT_MOVE %d)', player:getMod(xi.mod.MOUNT_MOVE)))
 
         local real = rawget(_G, 'mogGround')
         rawset(_G, 'mogGround', function(p) return p:getXPos(), y, p:getZPos() end) -- the floor below, as the C++ finds it
@@ -21,6 +22,7 @@ describe('MogHouse !flymount', function()
         assert(not player:getWallhack(), 'still flying after the second !flymount')
         assert(math.abs(player:getYPos() - y) < 0.01, string.format('landed at %.2f, not on the ground at %.2f', player:getYPos(), y))
         assert(not player:hasStatusEffect(xi.effect.MOUNTED), 'still on the chocobo')
+        assert(player:getMod(xi.mod.MOUNT_MOVE) == 0, 'the mount still sped up after landing')
     end)
 
     it('keeps a chocobo the player was already riding', function()
