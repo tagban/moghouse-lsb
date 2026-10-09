@@ -2,7 +2,7 @@
 // Sky and picture effects (MogHouse)
 //
 //   A zone's look, for clients that know it (MogHouse's own, ffxi-native): an aurora in the sky, the
-//   world drawn as a wireframe, a colour filter over the picture. It rides at the end of the zone's
+//   world drawn as a wireframe, a color filter over the picture. It rides at the end of the zone's
 //   weather packet (0x057), after the weather's own fields, tagged "MOGX": other clients read only
 //   the weather, the zone's own as it was, and see nothing new.
 //
@@ -19,9 +19,9 @@
 //   0x11 sky: 0 none, 1 an aurora
 //   0x12 world: 0 as it is, 1 the zone's own meshes in wireframe (people and monsters as they are),
 //        2 everything in wireframe
-//   0x13 filter: 0 none, 1 grey, 2 sepia, 3 a colour, 4 inverted, 5 night vision
-//   0x14 the sky's colour r, g, b and strength (0-255)
-//   0x18 the filter's colour r, g, b and amount (0-255)
+//   0x13 filter: 0 none, 1 grey, 2 sepia, 3 a color, 4 inverted, 5 night vision
+//   0x14 the sky's color r, g, b and strength (0-255)
+//   0x18 the filter's color r, g, b and amount (0-255)
 //   (0x1C in all)
 //
 #include "map/entities/char_entity.h"

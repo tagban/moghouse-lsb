@@ -34,16 +34,16 @@ player whose own wallhack was on when they took off (`[mogFly]on` 2) goes throug
 ## skyfx.cpp: `mogSkyFx`, a zone's look for MogHouse's client
 
 `!skyfx` (`modules/moghouse/commands/skyfx.lua`) gives a zone a look that MogHouse's own client
-(ffxi-native) draws: an aurora in the sky, the world as a wireframe, a colour filter over the picture.
+(ffxi-native) draws: an aurora in the sky, the world as a wireframe, a color filter over the picture.
 It rides at the end of the zone's weather packet (0x057), after the weather's own fields, tagged
 `MOGX`; other clients read only the weather (the zone's own, unchanged) and see nothing new. It goes to
 everyone in the zone when it is set and to each player as they come in (at their client's 0x00C).
 
 ```lua
 mogSkyFx(zoneId, sky, skyR, skyG, skyB, skyStrength, world, filter, filterR, filterG, filterB, filterAmount)
--- sky:    0 none, 1 an aurora (its colour, and strength 0-255)
+-- sky:    0 none, 1 an aurora (its color, and strength 0-255)
 -- world:  0 as it is, 1 the zone's own meshes in wireframe, 2 everything
--- filter: 0 none, 1 grey, 2 sepia, 3 a colour, 4 inverted, 5 night vision (amount 0-255)
+-- filter: 0 none, 1 grey, 2 sepia, 3 a color, 4 inverted, 5 night vision (amount 0-255)
 -- all 0: the zone as it is
 local sky, sr, sg, sb, ss, world, filter, fr, fg, fb, fa = mogSkyFxGet(zoneId)
 ```
