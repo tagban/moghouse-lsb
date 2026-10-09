@@ -9,7 +9,7 @@ local PERMISSIONS =
     apocnigh = 0, fixspeed = 0, grats = 0, home = 0, job = 0, kill = 0, shop = 0, starlight = 0,
 
     aery = 1, cerberus = 1, chocobo = 1, dominion = 1, down = 1, flash = 1, fly = 1, gmgear = 1,
-    gmisland = 1, kirin = 1, learnmagic = 1, mobmp = 1, seahorror = 1, signet = 1, slap = 1, up = 1,
+    gmisland = 1, kirin = 1, learnmagic = 1, mobmp = 1, seahorror = 1, signet = 1, skyfx = 1, slap = 1, up = 1,
 
     bringall = 2, jinx = 2, nopants = 2, nuke = 2,
 }

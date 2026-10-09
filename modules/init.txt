@@ -15,8 +15,8 @@ discord_bridge/
 # MogHouse's GM commands (!home, !gmgear, ...)
 moghouse/commands/
 
-# mogKnockback(actor, targetId, knockback, animation): !slap's knockback; and each /jump handed to
-# xi.moghouse.onJump (C++)
+# mogKnockback(actor, targetId, knockback, animation): !slap's knockback; each /jump handed to
+# xi.moghouse.onJump; and !skyfx's zone looks for MogHouse's client (C++)
 moghouse/cpp/
 
 # /jump leaves the ground a little: onto a rock, a step (with moghouse/cpp/jump.cpp)
