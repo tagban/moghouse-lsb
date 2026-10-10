@@ -78,6 +78,12 @@ end
 
 commandObj.ownMount = ownMount
 
+-- their music, over the mount theme the MOUNTED effect starts: the airships' (the four airship zones play
+-- 128) and the pirates' attack theme (scripts/globals/pirates.lua: 170)
+local MOUNT_MUSIC = { [AIRSHIP] = 128, [BOAT] = 170 }
+
+commandObj.MOUNT_MUSIC = MOUNT_MUSIC
+
 -- A mounted player's speed is the mount's alone (CBattleEntity::UpdateSpeed: map.MOUNT_SPEED / 2, times
 -- 1 + MOUNT_MOVE / 100), so the MOVE_SPEED_OVERRIDE !fly and !speed use does nothing on a chocobo:
 -- MOUNT_MOVE takes it there instead (0: the mount's own speed again)
@@ -154,6 +160,9 @@ commandObj.onTrigger = function(player, name)
 
         player:addStatusEffect(xi.effect.MOUNTED, { power = mount, duration = 1800, origin = player, subPower = 64, silent = true })
         player:setLocalVar(MOUNT_VAR, 1)
+        if MOUNT_MUSIC[mount] then
+            player:changeMusic(xi.musicSlot.MOUNT, MOUNT_MUSIC[mount])
+        end
     end
 
     player:setLocalVar(FLY_VAR, player:getWallhack() and 2 or 1)
