@@ -73,6 +73,6 @@ local mountId = mogGetMount(player)
 
 The effect's change of animation then sends it. The client finds a mount's model at file id
 102704 + mountId; MogHouse's client makes its own from 40 on (the bee: 40, 41, 42 by the rider's size;
-43 the airship), which other clients don't have. So everyone but the rider is told a retail mount in
-their place (the Crackclaw, the Levitus for the airship), in their copy of the rider's character update (0x00D's `MountIndex`), until
+43 the airship, 44 a boat), which other clients don't have. So everyone but the rider is told a retail mount in
+their place (the Crackclaw, the Levitus for the airship and the boat), in their copy of the rider's character update (0x00D's `MountIndex`), until
 the server can tell MogHouse's client from others.

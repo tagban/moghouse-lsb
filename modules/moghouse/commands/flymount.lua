@@ -3,8 +3,8 @@
 -- desc: Fly on a mount: up onto one and off the ground, as !fly flies, the mount kept. A chocobo by
 --       default (MogHouse's own client flaps its wings and folds its legs while it flies); or one of the
 --       game's own fliers by name: !flymount hippogryph (tulfaire, levitus, fenrir, pot, chair, ...), or
---       MogHouse's own: !flymount bee (sized to its rider), !flymount airship (MogHouse's client makes
---       them; others see a retail mount in their place).
+--       MogHouse's own: !flymount bee (sized to its rider), !flymount airship, !flymount boat
+--       (MogHouse's client makes them; others see a retail mount in their place).
 --       Again: down on the nearest floor, and off the mount.
 -----------------------------------
 require('modules/module_utils')
@@ -57,7 +57,7 @@ commandObj.MOUNTS = MOUNTS
 
 -- MogHouse's own mounts, past retail's: its client makes their models (ffxi-native, runtime/portable/mounts.h;
 -- other clients draw nothing). The bee comes in three sizes, by who rides it.
-local BEE_SMALL, BEE, BEE_LARGE, AIRSHIP = 40, 41, 42, 43
+local BEE_SMALL, BEE, BEE_LARGE, AIRSHIP, BOAT = 40, 41, 42, 43, 44
 
 local function ownMount(player, key)
     if key == 'bee' then
@@ -69,8 +69,10 @@ local function ownMount(player, key)
         end
 
         return BEE
-    elseif key == 'airship' or key == 'ship' then
+    elseif key == 'airship' then
         return AIRSHIP
+    elseif key == 'boat' or key == 'ship' or key == 'sailboat' then
+        return BOAT
     end
 end
 
@@ -94,7 +96,7 @@ commandObj.onTrigger = function(player, name)
         local key = string.lower(name):gsub('[%s_%-]', '')
         mount = ownMount(player, key) or (MOUNTS[key] and xi.mount[MOUNTS[key]])
         if not mount then
-            local names = { 'airship', 'bee' }
+            local names = { 'airship', 'bee', 'boat' }
             for k in pairs(MOUNTS) do
                 table.insert(names, k)
             end
