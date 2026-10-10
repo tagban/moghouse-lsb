@@ -2,7 +2,8 @@
 -- func: flymount
 -- desc: Fly on a mount: up onto one and off the ground, as !fly flies, the mount kept. A chocobo by
 --       default (MogHouse's own client flaps its wings and folds its legs while it flies); or one of the
---       game's own fliers by name: !flymount hippogryph (tulfaire, levitus, fenrir, pot, chair, ...).
+--       game's own fliers by name: !flymount hippogryph (tulfaire, levitus, fenrir, pot, chair, ...), or
+--       MogHouse's own: !flymount bee (sized to its rider; MogHouse's client makes it, others see none).
 --       Again: down on the nearest floor, and off the mount.
 -----------------------------------
 require('modules/module_utils')
@@ -53,6 +54,25 @@ local MOUNTS =
 
 commandObj.MOUNTS = MOUNTS
 
+-- MogHouse's own mounts, past retail's: its client makes their models (ffxi-native, runtime/portable/mounts.h;
+-- other clients draw nothing). The bee comes in three sizes, by who rides it.
+local BEE_SMALL, BEE, BEE_LARGE = 40, 41, 42
+
+local function ownMount(player, key)
+    if key == 'bee' then
+        local race = player:getRace()
+        if race == xi.race.TARU_M or race == xi.race.TARU_F then
+            return BEE_SMALL
+        elseif race == xi.race.GALKA then
+            return BEE_LARGE
+        end
+
+        return BEE
+    end
+end
+
+commandObj.ownMount = ownMount
+
 -- A mounted player's speed is the mount's alone (CBattleEntity::UpdateSpeed: map.MOUNT_SPEED / 2, times
 -- 1 + MOUNT_MOVE / 100), so the MOVE_SPEED_OVERRIDE !fly and !speed use does nothing on a chocobo:
 -- MOUNT_MOVE takes it there instead (0: the mount's own speed again)
@@ -69,9 +89,9 @@ commandObj.onTrigger = function(player, name)
     local mount = xi.mount.CHOCOBO
     if name and name ~= '' then
         local key = string.lower(name):gsub('[%s_%-]', '')
-        mount = MOUNTS[key] and xi.mount[MOUNTS[key]]
+        mount = ownMount(player, key) or (MOUNTS[key] and xi.mount[MOUNTS[key]])
         if not mount then
-            local names = {}
+            local names = { 'bee' }
             for k in pairs(MOUNTS) do
                 table.insert(names, k)
             end

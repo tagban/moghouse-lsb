@@ -58,4 +58,21 @@ describe('MogHouse !flymount', function()
         rawset(_G, 'mogGround', real)
         assert(not player:hasStatusEffect(xi.effect.MOUNTED), 'still on the hippogryph')
     end)
+
+    it('sizes the bee to its rider', function()
+        local cases = { { xi.race.TARU_F, 40 }, { xi.race.HUME_M, 41 }, { xi.race.MITHRA, 41 }, { xi.race.GALKA, 42 } }
+        for _, case in ipairs(cases) do
+            local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75, race = case[1] })
+            player:setGMLevel(5)
+            assert(xi.commands.flymount.ownMount(player, 'bee') == case[2],
+                string.format('race %d: bee %s, not %d', case[1], tostring(xi.commands.flymount.ownMount(player, 'bee')), case[2]))
+        end
+
+        local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75 })
+        player:setGMLevel(5)
+        xi.commands.flymount.onTrigger(player, 'bee')
+        local effect = player:getStatusEffect(xi.effect.MOUNTED)
+        assert(effect and effect:getPower() >= 40 and effect:getPower() <= 42, 'not on a bee')
+        assert(mogGetMount(player) == effect:getPower(), 'the client is told another mount than the bee')
+    end)
 end)
