@@ -59,3 +59,18 @@ filter's r g b amount (0x1C in all).
 4. Call `mogKnockback(...)` from Lua; `jump.cpp` needs `xi.moghouse.onJump` defined (`jump.lua`).
 
 Written for LandSandBoat as of September 2026 (`action_t`, `GP_SERV_COMMAND_BATTLE2`).
+
+## mount.cpp: `mogSetMount`, `mogGetMount`
+
+The client draws a rider's mount from the mount index in their character update (0x00D's
+`MountIndex`), which LandSandBoat sets only from the game's own Mount command. `!flymount` mounts a
+player by the MOUNTED effect, so it sets the index first:
+
+```lua
+mogSetMount(player, mountId) -- xi.mount's, or MogHouse's own from 40 on (the client makes those)
+local mountId = mogGetMount(player)
+```
+
+The effect's change of animation then sends it. The client finds a mount's model at file id
+102704 + mountId; MogHouse's client makes its own from 40 on (the bee: 40, 41, 42 by the rider's size;
+43 the airship), which other clients don't have.

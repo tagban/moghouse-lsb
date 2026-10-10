@@ -121,7 +121,13 @@ commandObj.onTrigger = function(player, name)
     end
 
     if not player:hasStatusEffect(xi.effect.MOUNTED) then
-        player:addStatusEffect(xi.effect.MOUNTED, { power = mount, duration = 1800, origin = player, subPower = mount == xi.mount.CHOCOBO and 64 or 0, silent = true })
+        -- the mount the client draws is the character update's mount index, which only the game's own
+        -- Mount command sets: set here first (modules/moghouse/cpp/mount.cpp), the effect then sends it
+        if mogSetMount then
+            mogSetMount(player, mount)
+        end
+
+        player:addStatusEffect(xi.effect.MOUNTED, { power = mount, duration = 1800, origin = player, subPower = 64, silent = true })
         player:setLocalVar(MOUNT_VAR, 1)
     end
 

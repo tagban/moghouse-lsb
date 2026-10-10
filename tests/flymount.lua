@@ -49,6 +49,7 @@ describe('MogHouse !flymount', function()
         xi.commands.flymount.onTrigger(player, 'Hippogryph')
         local effect = player:getStatusEffect(xi.effect.MOUNTED)
         assert(effect and effect:getPower() == xi.mount.HIPPOGRYPH, 'not on a hippogryph')
+        assert(mogGetMount(player) == xi.mount.HIPPOGRYPH, string.format('the client is told mount %d, not the hippogryph', mogGetMount(player)))
         assert(player:getWallhack(), 'not flying')
 
         local real = rawget(_G, 'mogGround')
