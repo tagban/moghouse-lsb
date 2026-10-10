@@ -13,7 +13,8 @@
 //   (the bee: 40 small, for a Tarutaru, 41 for the middle-sized, 42 for a Galka; 43 the airship).
 //
 //   A client without them has no file there, and what it does with a mount it has no model of isn't
-//   known: everyone else is told a retail mount in their place (the Crackclaw for the bee), in each copy
+//   known: everyone else is told a retail mount in their place (the Crackclaw for the bee, the Levitus
+//   for the airship), in each copy
 //   of the rider's character update (0x00D, MountIndex: bits 4-11 of the word at 0x44) but the rider's
 //   own. (Until the server can tell MogHouse's client from others, MogHouse's players see it too.)
 //
@@ -26,8 +27,15 @@
 namespace
 {
     constexpr uint8 OWN_FIRST = 40;      // MogHouse's own mounts, from here on
-    constexpr uint8 STAND_IN  = 37;      // what others are told instead: the Crackclaw (a beetle)
+    constexpr uint8 AIRSHIP   = 43;
     constexpr std::size_t FLAGS6 = 0x44; // GateId : 4, MountIndex : 8, ...
+
+    // what others are told instead: the Levitus for the airship (it floats too), the Crackclaw (a beetle)
+    // for the bees
+    constexpr auto standIn(uint32 mount) -> uint32
+    {
+        return mount == AIRSHIP ? 24 : 37;
+    }
 } // namespace
 
 class MountModule : public CPPModule
@@ -60,9 +68,10 @@ class MountModule : public CPPModule
         }
 
         uint32 flags = packet->ref<uint32>(FLAGS6);
-        if (((flags >> 4) & 0xFF) >= OWN_FIRST)
+        uint32 mount = (flags >> 4) & 0xFF;
+        if (mount >= OWN_FIRST)
         {
-            packet->ref<uint32>(FLAGS6) = (flags & ~(0xFFu << 4)) | (uint32{ STAND_IN } << 4);
+            packet->ref<uint32>(FLAGS6) = (flags & ~(0xFFu << 4)) | (standIn(mount) << 4);
         }
     }
 };
