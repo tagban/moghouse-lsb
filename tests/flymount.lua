@@ -2,6 +2,13 @@
 -- MogHouse's !flymount (modules/moghouse/commands/flymount.lua), run in LandSandBoat's xi_test.
 -----------------------------------
 
+-- modules/moghouse/cpp/mount.cpp's functions, as it keeps them (xi_test has no C++ modules)
+local mounts = {}
+if not rawget(_G, 'mogSetMount') then
+    rawset(_G, 'mogSetMount', function(p, id) mounts[p:getID()] = id end)
+    rawset(_G, 'mogGetMount', function(p) return mounts[p:getID()] or 0 end)
+end
+
 describe('MogHouse !flymount', function()
     it('mounts a chocobo and takes off, then lands and gets off again', function()
         local player = xi.test.world:spawnPlayer({ zone = xi.zone.SOUTH_GUSTABERG, job = xi.job.WAR, level = 75 })
